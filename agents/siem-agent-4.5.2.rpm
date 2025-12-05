@@ -1,0 +1,21 @@
+# SIEM Agent Linux RPM Package v4.5.2
+# This is a placeholder file for demonstration purposes
+# In a real implementation, this would be the actual RPM package
+
+echo "SIEM Agent Linux RPM Package"
+echo "Version: 4.5.2"
+echo "Architecture: x86_64"
+echo "Platform: CentOS, RHEL, Fedora"
+echo ""
+echo "Features:"
+echo "- Real-time log collection"
+echo "- Process monitoring"
+echo "- File integrity monitoring"
+echo "- Network monitoring"
+echo "- Encrypted communication"
+echo "- Systemd integration"
+echo ""
+echo "Installation Instructions:"
+echo "sudo rpm -ivh siem-agent-4.5.2.rpm"
+echo "sudo systemctl enable siem-agent"
+echo "sudo systemctl start siem-agent"

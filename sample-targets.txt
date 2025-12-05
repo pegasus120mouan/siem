@@ -1,0 +1,25 @@
+# Fichier d'exemple pour l'analyse OSINT en lot
+# Une cible par ligne (IP, domaine ou URL)
+
+# IPs suspectes
+14.103.112.110
+47.128.30.12
+197.58.178.121
+156.204.176.43
+
+# IPs légitimes pour comparaison
+8.8.8.8
+1.1.1.1
+208.67.222.222
+
+# Domaines
+google.com
+facebook.com
+malicious-example.com
+phishing-test.net
+
+# URLs
+https://www.google.com
+https://example.com
+http://suspicious-site.com/malware
+https://phishing-example.net/login

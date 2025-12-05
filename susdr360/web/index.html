@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUSDR 360 - Système Unifié de Surveillance, Détection et Réponse</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Vue.js 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .sidebar-transition {
+            transition: width 0.3s ease;
+        }
+        
+        .notification-enter-active, .notification-leave-active {
+            transition: all 0.3s ease;
+        }
+        
+        .notification-enter-from, .notification-leave-to {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <div id="app">
+        <!-- Sidebar -->
+        <div :class="['fixed left-0 top-0 h-full bg-gray-800 sidebar-transition z-50', sidebarCollapsed ? 'w-16' : 'w-64']">
+            <!-- Logo -->
+            <div class="flex items-center justify-center h-16 border-b border-gray-700">
+                <div v-if="!sidebarCollapsed" class="flex items-center space-x-2">
+                    <i class="fas fa-shield-alt text-blue-400 text-2xl"></i>
+                    <span class="text-xl font-bold">SUSDR 360</span>
+                </div>
+                <i v-else class="fas fa-shield-alt text-blue-400 text-2xl"></i>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="mt-8">
+                <div v-for="item in menuItems" :key="item.id" class="mb-2">
+                    <a @click="setActiveView(item.id)" 
+                       :class="['flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white cursor-pointer transition-colors', 
+                                activeView === item.id ? 'bg-blue-600 text-white' : '']">
+                        <i :class="[item.icon, 'text-lg']"></i>
+                        <span v-if="!sidebarCollapsed" class="ml-3">{{ item.name }}</span>
+                    </a>
+                </div>
+            </nav>
+            
+            <!-- Toggle Button -->
+            <button @click="toggleSidebar" 
+                    class="absolute bottom-4 left-4 right-4 bg-gray-700 hover:bg-gray-600 text-white p-2 rounded transition-colors">
+                <i :class="sidebarCollapsed ? 'fas fa-chevron-right' : 'fas fa-chevron-left'"></i>
+            </button>
+        </div>
+        
+        <!-- Main Content -->
+        <div :class="['transition-all duration-300', sidebarCollapsed ? 'ml-16' : 'ml-64']">
+            <!-- Header -->
+            <header class="bg-gray-800 shadow-lg border-b border-gray-700">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <div class="flex items-center space-x-4">
+                        <h1 class="text-2xl font-bold">{{ currentViewTitle }}</h1>
+                        <div class="flex items-center space-x-2 text-sm text-gray-400">
+                            <i class="fas fa-circle text-green-400 pulse-animation"></i>
+                            <span>Système opérationnel</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <!-- Notifications -->
+                        <div class="relative">
+                            <button @click="showNotifications = !showNotifications" 
+                                    class="relative p-2 text-gray-400 hover:text-white transition-colors">
+                                <i class="fas fa-bell text-lg"></i>
+                                <span v-if="notifications.length > 0" 
+                                      class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                    {{ notifications.length }}
+                                </span>
+                            </button>
+                        </div>
+                        
+                        <!-- User Menu -->
+                        <div class="flex items-center space-x-2">
+                            <img src="https://via.placeholder.com/32" alt="User" class="w-8 h-8 rounded-full">
+                            <span class="text-sm">Fisher Ouattara</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Dashboard View -->
+            <div v-if="activeView === 'dashboard'" class="p-6">
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div v-for="stat in dashboardStats" :key="stat.title" 
+                         class="bg-gray-800 rounded-lg p-6 card-hover">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">{{ stat.title }}</p>
+                                <p class="text-2xl font-bold mt-1">{{ stat.value }}</p>
+                                <p :class="['text-sm mt-1', stat.trend > 0 ? 'text-green-400' : 'text-red-400']">
+                                    <i :class="stat.trend > 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down'"></i>
+                                    {{ Math.abs(stat.trend) }}% vs hier
+                                </p>
+                            </div>
+                            <div :class="['w-12 h-12 rounded-lg flex items-center justify-center', stat.bgColor]">
+                                <i :class="[stat.icon, 'text-xl']"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <!-- Events Timeline -->
+                    <div class="bg-gray-800 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold mb-4">Événements par heure</h3>
+                        <canvas id="eventsChart" width="400" height="200"></canvas>
+                    </div>
+                    
+                    <!-- Threat Distribution -->
+                    <div class="bg-gray-800 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold mb-4">Distribution des menaces</h3>
+                        <canvas id="threatsChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Recent Events -->
+                <div class="bg-gray-800 rounded-lg p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold">Événements récents</h3>
+                        <button @click="setActiveView('events')" 
+                                class="text-blue-400 hover:text-blue-300 text-sm">
+                            Voir tout <i class="fas fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-700">
+                                    <th class="text-left py-2 text-gray-400 text-sm">Heure</th>
+                                    <th class="text-left py-2 text-gray-400 text-sm">Type</th>
+                                    <th class="text-left py-2 text-gray-400 text-sm">Source</th>
+                                    <th class="text-left py-2 text-gray-400 text-sm">Sévérité</th>
+                                    <th class="text-left py-2 text-gray-400 text-sm">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="event in recentEvents" :key="event.id" 
+                                    class="border-b border-gray-700 hover:bg-gray-700 transition-colors">
+                                    <td class="py-3 text-sm text-gray-300">{{ formatTime(event.timestamp) }}</td>
+                                    <td class="py-3">
+                                        <span :class="['px-2 py-1 rounded text-xs', getEventTypeClass(event.type)]">
+                                            {{ event.type }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3 text-sm">{{ event.source }}</td>
+                                    <td class="py-3">
+                                        <span :class="['px-2 py-1 rounded text-xs', getSeverityClass(event.severity)]">
+                                            {{ event.severity }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3 text-sm text-gray-300">{{ event.description }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Events View -->
+            <div v-if="activeView === 'events'" class="p-6">
+                <div class="bg-gray-800 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4">Gestion des Événements</h3>
+                    <p class="text-gray-400">Interface de recherche et d'analyse des événements de sécurité...</p>
+                </div>
+            </div>
+            
+            <!-- Incidents View -->
+            <div v-if="activeView === 'incidents'" class="p-6">
+                <div class="bg-gray-800 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4">Gestion des Incidents</h3>
+                    <p class="text-gray-400">Interface de gestion des incidents de sécurité détectés...</p>
+                </div>
+            </div>
+            
+            <!-- Analytics View -->
+            <div v-if="activeView === 'analytics'" class="p-6">
+                <div class="bg-gray-800 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4">Analyses et Rapports</h3>
+                    <p class="text-gray-400">Analyses avancées et rapports de sécurité...</p>
+                </div>
+            </div>
+            
+            <!-- Threat Intel View -->
+            <div v-if="activeView === 'threat-intel'" class="p-6">
+                <div class="bg-gray-800 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4">Threat Intelligence</h3>
+                    <p class="text-gray-400">Renseignement sur les menaces et indicateurs de compromission...</p>
+                </div>
+            </div>
+            
+            <!-- Configuration View -->
+            <div v-if="activeView === 'config'" class="p-6">
+                <div class="bg-gray-800 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4">Configuration</h3>
+                    <p class="text-gray-400">Configuration du système SUSDR 360...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notifications Panel -->
+        <transition name="notification">
+            <div v-if="showNotifications" 
+                 class="fixed right-4 top-20 w-80 bg-gray-800 rounded-lg shadow-xl border border-gray-700 z-50">
+                <div class="p-4 border-b border-gray-700">
+                    <h4 class="font-semibold">Notifications</h4>
+                </div>
+                <div class="max-h-96 overflow-y-auto">
+                    <div v-for="notification in notifications" :key="notification.id" 
+                         class="p-4 border-b border-gray-700 hover:bg-gray-700 transition-colors">
+                        <div class="flex items-start space-x-3">
+                            <i :class="[notification.icon, notification.color, 'mt-1']"></i>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium">{{ notification.title }}</p>
+                                <p class="text-xs text-gray-400 mt-1">{{ notification.message }}</p>
+                                <p class="text-xs text-gray-500 mt-1">{{ formatTime(notification.timestamp) }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    sidebarCollapsed: false,
+                    activeView: 'dashboard',
+                    showNotifications: false,
+                    
+                    menuItems: [
+                        { id: 'dashboard', name: 'Tableau de Bord', icon: 'fas fa-tachometer-alt' },
+                        { id: 'events', name: 'Événements', icon: 'fas fa-list-ul' },
+                        { id: 'incidents', name: 'Incidents', icon: 'fas fa-exclamation-triangle' },
+                        { id: 'analytics', name: 'Analyses', icon: 'fas fa-chart-line' },
+                        { id: 'threat-intel', name: 'Threat Intel', icon: 'fas fa-eye' },
+                        { id: 'config', name: 'Configuration', icon: 'fas fa-cog' }
+                    ],
+                    
+                    dashboardStats: [
+                        {
+                            title: 'Événements Aujourd\'hui',
+                            value: '15,420',
+                            trend: 12,
+                            icon: 'fas fa-list',
+                            bgColor: 'bg-blue-500 bg-opacity-20 text-blue-400'
+                        },
+                        {
+                            title: 'Incidents Actifs',
+                            value: '23',
+                            trend: -8,
+                            icon: 'fas fa-exclamation-triangle',
+                            bgColor: 'bg-red-500 bg-opacity-20 text-red-400'
+                        },
+                        {
+                            title: 'Anomalies Détectées',
+                            value: '156',
+                            trend: 5,
+                            icon: 'fas fa-search',
+                            bgColor: 'bg-yellow-500 bg-opacity-20 text-yellow-400'
+                        },
+                        {
+                            title: 'Taux de Détection',
+                            value: '97.2%',
+                            trend: 2,
+                            icon: 'fas fa-shield-alt',
+                            bgColor: 'bg-green-500 bg-opacity-20 text-green-400'
+                        }
+                    ],
+                    
+                    recentEvents: [
+                        {
+                            id: 1,
+                            timestamp: new Date(Date.now() - 5 * 60000),
+                            type: 'Authentication',
+                            source: 'Windows Security',
+                            severity: 'Medium',
+                            description: 'Tentative de connexion échouée pour l\'utilisateur admin'
+                        },
+                        {
+                            id: 2,
+                            timestamp: new Date(Date.now() - 10 * 60000),
+                            type: 'Network',
+                            source: 'Firewall',
+                            severity: 'High',
+                            description: 'Trafic suspect détecté depuis 192.168.1.100'
+                        },
+                        {
+                            id: 3,
+                            timestamp: new Date(Date.now() - 15 * 60000),
+                            type: 'Endpoint',
+                            source: 'Antivirus',
+                            severity: 'Critical',
+                            description: 'Malware détecté et mis en quarantaine'
+                        }
+                    ],
+                    
+                    notifications: [
+                        {
+                            id: 1,
+                            title: 'Incident Critique',
+                            message: 'Tentative d\'intrusion détectée sur le serveur web',
+                            timestamp: new Date(Date.now() - 2 * 60000),
+                            icon: 'fas fa-exclamation-circle',
+                            color: 'text-red-400'
+                        },
+                        {
+                            id: 2,
+                            title: 'Mise à jour disponible',
+                            message: 'Nouvelle version des règles de détection disponible',
+                            timestamp: new Date(Date.now() - 30 * 60000),
+                            icon: 'fas fa-info-circle',
+                            color: 'text-blue-400'
+                        }
+                    ]
+                }
+            },
+            
+            computed: {
+                currentViewTitle() {
+                    const item = this.menuItems.find(item => item.id === this.activeView);
+                    return item ? item.name : 'SUSDR 360';
+                }
+            },
+            
+            methods: {
+                toggleSidebar() {
+                    this.sidebarCollapsed = !this.sidebarCollapsed;
+                },
+                
+                setActiveView(view) {
+                    this.activeView = view;
+                    this.showNotifications = false;
+                },
+                
+                formatTime(timestamp) {
+                    return new Date(timestamp).toLocaleTimeString('fr-FR', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                },
+                
+                getEventTypeClass(type) {
+                    const classes = {
+                        'Authentication': 'bg-blue-500 bg-opacity-20 text-blue-400',
+                        'Network': 'bg-green-500 bg-opacity-20 text-green-400',
+                        'Endpoint': 'bg-purple-500 bg-opacity-20 text-purple-400',
+                        'System': 'bg-gray-500 bg-opacity-20 text-gray-400'
+                    };
+                    return classes[type] || 'bg-gray-500 bg-opacity-20 text-gray-400';
+                },
+                
+                getSeverityClass(severity) {
+                    const classes = {
+                        'Low': 'bg-green-500 bg-opacity-20 text-green-400',
+                        'Medium': 'bg-yellow-500 bg-opacity-20 text-yellow-400',
+                        'High': 'bg-orange-500 bg-opacity-20 text-orange-400',
+                        'Critical': 'bg-red-500 bg-opacity-20 text-red-400'
+                    };
+                    return classes[severity] || 'bg-gray-500 bg-opacity-20 text-gray-400';
+                },
+                
+                initCharts() {
+                    // Events Timeline Chart
+                    const eventsCtx = document.getElementById('eventsChart');
+                    if (eventsCtx) {
+                        new Chart(eventsCtx, {
+                            type: 'line',
+                            data: {
+                                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                                datasets: [{
+                                    label: 'Événements',
+                                    data: [450, 380, 820, 1200, 950, 680],
+                                    borderColor: '#60A5FA',
+                                    backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                                    tension: 0.4,
+                                    fill: true
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        labels: { color: '#9CA3AF' }
+                                    }
+                                },
+                                scales: {
+                                    x: {
+                                        ticks: { color: '#9CA3AF' },
+                                        grid: { color: '#374151' }
+                                    },
+                                    y: {
+                                        ticks: { color: '#9CA3AF' },
+                                        grid: { color: '#374151' }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    
+                    // Threats Distribution Chart
+                    const threatsCtx = document.getElementById('threatsChart');
+                    if (threatsCtx) {
+                        new Chart(threatsCtx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['Malware', 'Phishing', 'Brute Force', 'DDoS', 'Autres'],
+                                datasets: [{
+                                    data: [35, 25, 20, 15, 5],
+                                    backgroundColor: [
+                                        '#EF4444',
+                                        '#F59E0B',
+                                        '#8B5CF6',
+                                        '#06B6D4',
+                                        '#6B7280'
+                                    ]
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'bottom',
+                                        labels: { color: '#9CA3AF' }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+            },
+            
+            mounted() {
+                this.$nextTick(() => {
+                    this.initCharts();
+                });
+                
+                // Simulation de nouvelles notifications
+                setInterval(() => {
+                    if (Math.random() > 0.8) {
+                        this.notifications.unshift({
+                            id: Date.now(),
+                            title: 'Nouvel événement',
+                            message: 'Activité suspecte détectée',
+                            timestamp: new Date(),
+                            icon: 'fas fa-bell',
+                            color: 'text-yellow-400'
+                        });
+                        
+                        if (this.notifications.length > 10) {
+                            this.notifications.pop();
+                        }
+                    }
+                }, 30000);
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

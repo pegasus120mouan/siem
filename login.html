@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIEM - Connexion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        .cyber-grid {
+            background-image: 
+                linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        .login-container {
+            backdrop-filter: blur(10px);
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .input-field {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            background: rgba(30, 41, 59, 0.8);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .alert {
+            animation: alertSlide 0.3s ease-out;
+        }
+        
+        @keyframes alertSlide {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen cyber-grid flex items-center justify-center p-4">
+    <!-- Particules d'arrière-plan -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-1/4 left-1/4 w-2 h-2 bg-blue-400 rounded-full pulse-animation"></div>
+        <div class="absolute top-3/4 right-1/4 w-1 h-1 bg-cyan-400 rounded-full pulse-animation" style="animation-delay: 1s;"></div>
+        <div class="absolute top-1/2 left-3/4 w-1.5 h-1.5 bg-indigo-400 rounded-full pulse-animation" style="animation-delay: 2s;"></div>
+    </div>
+
+    <div class="w-full max-w-md">
+        <!-- Logo et titre -->
+        <div class="text-center mb-8 slide-in">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl mb-4">
+                <i class="fas fa-shield-alt text-2xl text-white"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-white mb-2">SIEM Platform</h1>
+            <p class="text-blue-200">Security Information and Event Management</p>
+        </div>
+
+        <!-- Formulaire de connexion -->
+        <div class="login-container rounded-2xl p-8 shadow-2xl slide-in" style="animation-delay: 0.2s;">
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-blue-200 mb-2">
+                        <i class="fas fa-user mr-2"></i>Nom d'utilisateur ou Email
+                    </label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        required
+                        class="input-field w-full px-4 py-3 rounded-lg text-white placeholder-gray-400 focus:outline-none"
+                        placeholder="Entrez votre nom d'utilisateur"
+                        autocomplete="username"
+                    >
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-blue-200 mb-2">
+                        <i class="fas fa-lock mr-2"></i>Mot de passe
+                    </label>
+                    <div class="relative">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            required
+                            class="input-field w-full px-4 py-3 pr-12 rounded-lg text-white placeholder-gray-400 focus:outline-none"
+                            placeholder="Entrez votre mot de passe"
+                            autocomplete="current-password"
+                        >
+                        <button 
+                            type="button" 
+                            id="togglePassword"
+                            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                        >
+                            <i class="fas fa-eye" id="eyeIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="rememberMe" class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-blue-200">Se souvenir de moi</span>
+                    </label>
+                </div>
+
+                <button 
+                    type="submit" 
+                    id="loginBtn"
+                    class="btn-primary w-full py-3 px-4 rounded-lg text-white font-semibold focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50"
+                >
+                    <span id="loginBtnText">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Se connecter
+                    </span>
+                    <span id="loginBtnLoading" class="hidden">
+                        <i class="fas fa-spinner fa-spin mr-2"></i>Connexion...
+                    </span>
+                </button>
+            </form>
+
+            <!-- Zone d'alerte -->
+            <div id="alertContainer" class="mt-4"></div>
+        </div>
+
+        <!-- Informations de connexion par défaut -->
+        <div class="mt-6 p-4 bg-yellow-900 bg-opacity-50 border border-yellow-600 rounded-lg slide-in" style="animation-delay: 0.4s;">
+            <div class="flex items-center">
+                <i class="fas fa-info-circle text-yellow-400 mr-2"></i>
+                <div class="text-sm text-yellow-200">
+                    <p class="font-semibold">Compte par défaut :</p>
+                    <p>Utilisateur : <code class="bg-yellow-800 px-1 rounded">admin</code></p>
+                    <p>Mot de passe : <code class="bg-yellow-800 px-1 rounded">admin123</code></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-8 text-blue-300 text-sm slide-in" style="animation-delay: 0.6s;">
+            <p>&copy; 2024 SIEM Platform. Tous droits réservés.</p>
+            <p class="mt-1">Version 1.0.0</p>
+        </div>
+    </div>
+
+    <script>
+        class LoginManager {
+            constructor() {
+                this.form = document.getElementById('loginForm');
+                this.usernameInput = document.getElementById('username');
+                this.passwordInput = document.getElementById('password');
+                this.loginBtn = document.getElementById('loginBtn');
+                this.loginBtnText = document.getElementById('loginBtnText');
+                this.loginBtnLoading = document.getElementById('loginBtnLoading');
+                this.alertContainer = document.getElementById('alertContainer');
+                this.togglePasswordBtn = document.getElementById('togglePassword');
+                this.eyeIcon = document.getElementById('eyeIcon');
+                
+                this.init();
+            }
+            
+            init() {
+                // Vérifier si déjà connecté
+                this.checkExistingSession();
+                
+                // Event listeners
+                this.form.addEventListener('submit', (e) => this.handleLogin(e));
+                this.togglePasswordBtn.addEventListener('click', () => this.togglePassword());
+                
+                // Auto-focus sur le champ username
+                this.usernameInput.focus();
+                
+                // Gestion des touches
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !this.loginBtn.disabled) {
+                        this.form.dispatchEvent(new Event('submit'));
+                    }
+                });
+            }
+            
+            async checkExistingSession() {
+                try {
+                    const response = await fetch('auth.php?action=check');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Utilisateur déjà connecté, rediriger
+                        window.location.href = 'index.html';
+                    }
+                } catch (error) {
+                    // Ignorer les erreurs de vérification de session
+                }
+            }
+            
+            async handleLogin(e) {
+                e.preventDefault();
+                
+                const username = this.usernameInput.value.trim();
+                const password = this.passwordInput.value;
+                
+                if (!username || !password) {
+                    this.showAlert('Veuillez remplir tous les champs', 'error');
+                    return;
+                }
+                
+                this.setLoading(true);
+                this.clearAlert();
+                
+                try {
+                    const response = await fetch('auth.php?action=login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            username: username,
+                            password: password
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.showAlert('Connexion réussie ! Redirection...', 'success');
+                        
+                        // Stocker les informations utilisateur
+                        localStorage.setItem('siem_user', JSON.stringify(data.user));
+                        
+                        // Rediriger après un court délai
+                        setTimeout(() => {
+                            window.location.href = 'index.html';
+                        }, 1500);
+                    } else {
+                        this.showAlert(data.message || 'Erreur de connexion', 'error');
+                    }
+                } catch (error) {
+                    console.error('Erreur de connexion:', error);
+                    this.showAlert('Erreur de connexion au serveur', 'error');
+                } finally {
+                    this.setLoading(false);
+                }
+            }
+            
+            togglePassword() {
+                const isPassword = this.passwordInput.type === 'password';
+                this.passwordInput.type = isPassword ? 'text' : 'password';
+                this.eyeIcon.className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
+            }
+            
+            setLoading(loading) {
+                this.loginBtn.disabled = loading;
+                this.loginBtnText.classList.toggle('hidden', loading);
+                this.loginBtnLoading.classList.toggle('hidden', !loading);
+                
+                if (loading) {
+                    this.loginBtn.classList.add('opacity-75', 'cursor-not-allowed');
+                } else {
+                    this.loginBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+                }
+            }
+            
+            showAlert(message, type = 'info') {
+                const alertClass = {
+                    success: 'bg-green-900 border-green-600 text-green-200',
+                    error: 'bg-red-900 border-red-600 text-red-200',
+                    warning: 'bg-yellow-900 border-yellow-600 text-yellow-200',
+                    info: 'bg-blue-900 border-blue-600 text-blue-200'
+                };
+                
+                const iconClass = {
+                    success: 'fas fa-check-circle',
+                    error: 'fas fa-exclamation-circle',
+                    warning: 'fas fa-exclamation-triangle',
+                    info: 'fas fa-info-circle'
+                };
+                
+                this.alertContainer.innerHTML = `
+                    <div class="alert p-4 rounded-lg border ${alertClass[type]} flex items-center">
+                        <i class="${iconClass[type]} mr-3"></i>
+                        <span>${message}</span>
+                    </div>
+                `;
+                
+                // Auto-hide success messages
+                if (type === 'success') {
+                    setTimeout(() => this.clearAlert(), 3000);
+                }
+            }
+            
+            clearAlert() {
+                this.alertContainer.innerHTML = '';
+            }
+        }
+        
+        // Initialiser le gestionnaire de connexion
+        document.addEventListener('DOMContentLoaded', () => {
+            new LoginManager();
+        });
+    </script>
+</body>
+</html>

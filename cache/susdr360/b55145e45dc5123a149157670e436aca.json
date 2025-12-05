@@ -1,0 +1,1 @@
+{"status":"operational","uptime":"2 days, 5 hours","cpu_usage":52,"memory_usage":57,"disk_usage":57,"components":{"event_processor":"active","correlation_engine":"active","ai_detector":"active","api_server":"active","database":"active"},"performance":{"events_per_second":163,"avg_response_time":1.325,"error_rate":0.76}}

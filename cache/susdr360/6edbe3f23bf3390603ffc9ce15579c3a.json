@@ -1,0 +1,1 @@
+{"threats":[{"name":"Failed Login Attempts","count":202,"severity":"medium"},{"name":"Brute Force Attack","count":117,"severity":"high"},{"name":"Malware Detection","count":40,"severity":"critical"},{"name":"Port Scanning","count":31,"severity":"low"},{"name":"Suspicious Network Activity","count":30,"severity":"medium"}],"total":5}

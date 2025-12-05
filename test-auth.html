@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test d'authentification - SIEM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 text-center">
+            <i class="fas fa-shield-alt text-blue-500 mr-3"></i>
+            Test d'authentification SIEM
+        </h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Test de connexion -->
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <h2 class="text-xl font-semibold mb-4 text-blue-400">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Test de connexion
+                </h2>
+                
+                <form id="testLoginForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Nom d'utilisateur</label>
+                        <input 
+                            type="text" 
+                            id="testUsername" 
+                            value="admin"
+                            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+                        >
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Mot de passe</label>
+                        <input 
+                            type="password" 
+                            id="testPassword" 
+                            value="admin123"
+                            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+                        >
+                    </div>
+                    <button 
+                        type="submit" 
+                        class="w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition-colors"
+                    >
+                        Tester la connexion
+                    </button>
+                </form>
+                
+                <div id="loginResult" class="mt-4"></div>
+            </div>
+            
+            <!-- Vérification de session -->
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <h2 class="text-xl font-semibold mb-4 text-green-400">
+                    <i class="fas fa-check-circle mr-2"></i>Vérification de session
+                </h2>
+                
+                <button 
+                    id="checkSessionBtn" 
+                    class="w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md transition-colors mb-4"
+                >
+                    Vérifier la session
+                </button>
+                
+                <div id="sessionResult" class="mt-4"></div>
+            </div>
+            
+            <!-- Logs d'authentification -->
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 md:col-span-2">
+                <h2 class="text-xl font-semibold mb-4 text-yellow-400">
+                    <i class="fas fa-list mr-2"></i>Logs d'authentification
+                </h2>
+                
+                <button 
+                    id="loadLogsBtn" 
+                    class="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-md transition-colors mb-4"
+                >
+                    Charger les logs
+                </button>
+                
+                <div id="logsResult" class="mt-4"></div>
+            </div>
+            
+            <!-- Test de déconnexion -->
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 md:col-span-2">
+                <h2 class="text-xl font-semibold mb-4 text-red-400">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Test de déconnexion
+                </h2>
+                
+                <button 
+                    id="logoutBtn" 
+                    class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md transition-colors"
+                >
+                    Tester la déconnexion
+                </button>
+                
+                <div id="logoutResult" class="mt-4"></div>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <div class="mt-8 text-center space-x-4">
+            <a href="login.html" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-md transition-colors inline-block">
+                Page de connexion
+            </a>
+            <a href="index.html" class="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-md transition-colors inline-block">
+                Dashboard principal
+            </a>
+        </div>
+    </div>
+
+    <script>
+        class AuthTester {
+            constructor() {
+                this.init();
+            }
+            
+            init() {
+                document.getElementById('testLoginForm').addEventListener('submit', (e) => this.testLogin(e));
+                document.getElementById('checkSessionBtn').addEventListener('click', () => this.checkSession());
+                document.getElementById('loadLogsBtn').addEventListener('click', () => this.loadLogs());
+                document.getElementById('logoutBtn').addEventListener('click', () => this.testLogout());
+            }
+            
+            async testLogin(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('testUsername').value;
+                const password = document.getElementById('testPassword').value;
+                const resultDiv = document.getElementById('loginResult');
+                
+                try {
+                    const response = await fetch('auth.php?action=login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ username, password })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        resultDiv.innerHTML = `
+                            <div class="bg-green-900 border border-green-600 text-green-200 p-3 rounded-md">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                <strong>Connexion réussie !</strong><br>
+                                Utilisateur: ${data.user.username}<br>
+                                Rôle: ${data.user.role}<br>
+                                Token: ${data.session_token.substring(0, 20)}...
+                            </div>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `
+                            <div class="bg-red-900 border border-red-600 text-red-200 p-3 rounded-md">
+                                <i class="fas fa-exclamation-circle mr-2"></i>
+                                <strong>Échec de connexion :</strong><br>
+                                ${data.message}
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    resultDiv.innerHTML = `
+                        <div class="bg-red-900 border border-red-600 text-red-200 p-3 rounded-md">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            <strong>Erreur :</strong> ${error.message}
+                        </div>
+                    `;
+                }
+            }
+            
+            async checkSession() {
+                const resultDiv = document.getElementById('sessionResult');
+                
+                try {
+                    const response = await fetch('auth.php?action=check');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        resultDiv.innerHTML = `
+                            <div class="bg-green-900 border border-green-600 text-green-200 p-3 rounded-md">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                <strong>Session valide !</strong><br>
+                                Utilisateur: ${data.user.username}<br>
+                                Email: ${data.user.email}<br>
+                                Rôle: ${data.user.role}
+                            </div>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `
+                            <div class="bg-yellow-900 border border-yellow-600 text-yellow-200 p-3 rounded-md">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                <strong>Aucune session active</strong><br>
+                                ${data.message}
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    resultDiv.innerHTML = `
+                        <div class="bg-red-900 border border-red-600 text-red-200 p-3 rounded-md">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            <strong>Erreur :</strong> ${error.message}
+                        </div>
+                    `;
+                }
+            }
+            
+            async loadLogs() {
+                const resultDiv = document.getElementById('logsResult');
+                
+                try {
+                    const response = await fetch('auth.php?action=logs&limit=10');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        const logsHtml = data.logs.map(log => `
+                            <div class="border-l-4 ${log.success ? 'border-green-500 bg-green-900' : 'border-red-500 bg-red-900'} p-3 mb-2 rounded-r-md">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <strong>${log.username || 'N/A'}</strong> - ${log.action}
+                                        <br><small class="text-gray-300">${log.message}</small>
+                                    </div>
+                                    <div class="text-right text-sm text-gray-400">
+                                        <div>${log.ip_address || 'N/A'}</div>
+                                        <div>${new Date(log.created_at).toLocaleString()}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                        
+                        resultDiv.innerHTML = `
+                            <div class="space-y-2">
+                                <h3 class="font-semibold mb-2">Derniers logs (${data.logs.length}) :</h3>
+                                ${logsHtml}
+                            </div>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `
+                            <div class="bg-yellow-900 border border-yellow-600 text-yellow-200 p-3 rounded-md">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                ${data.message}
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    resultDiv.innerHTML = `
+                        <div class="bg-red-900 border border-red-600 text-red-200 p-3 rounded-md">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            <strong>Erreur :</strong> ${error.message}
+                        </div>
+                    `;
+                }
+            }
+            
+            async testLogout() {
+                const resultDiv = document.getElementById('logoutResult');
+                
+                try {
+                    const response = await fetch('auth.php?action=logout', {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        resultDiv.innerHTML = `
+                            <div class="bg-green-900 border border-green-600 text-green-200 p-3 rounded-md">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                <strong>Déconnexion réussie !</strong><br>
+                                ${data.message}
+                            </div>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `
+                            <div class="bg-red-900 border border-red-600 text-red-200 p-3 rounded-md">
+                                <i class="fas fa-exclamation-circle mr-2"></i>
+                                <strong>Erreur de déconnexion :</strong><br>
+                                ${data.message}
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    resultDiv.innerHTML = `
+                        <div class="bg-red-900 border border-red-600 text-red-200 p-3 rounded-md">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            <strong>Erreur :</strong> ${error.message}
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            new AuthTester();
+        });
+    </script>
+</body>
+</html>

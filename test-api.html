@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API AbuseIPDB</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #1a1a1a; color: white; }
+        .container { max-width: 800px; margin: 0 auto; }
+        input, button { padding: 10px; margin: 5px; border: 1px solid #444; background: #333; color: white; }
+        button { background: #0066cc; cursor: pointer; }
+        button:hover { background: #0088ff; }
+        .result { margin-top: 20px; padding: 15px; background: #2a2a2a; border-radius: 5px; }
+        .error { background: #660000; }
+        .success { background: #006600; }
+        pre { background: #1a1a1a; padding: 10px; overflow-x: auto; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test API AbuseIPDB</h1>
+        <p>Testez votre configuration API AbuseIPDB avant de l'utiliser dans le SIEM.</p>
+        
+        <div>
+            <input type="password" id="apiKey" placeholder="Votre clé API AbuseIPDB" style="width: 300px;">
+            <input type="text" id="ipAddress" placeholder="IP à tester (ex: 14.103.112.110)" value="14.103.112.110">
+            <button onclick="testAPI()">Tester</button>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function testAPI() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const ip = document.getElementById('ipAddress').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (!apiKey) {
+                resultDiv.innerHTML = '<div class="result error">❌ Veuillez entrer votre clé API</div>';
+                return;
+            }
+            
+            if (!ip) {
+                resultDiv.innerHTML = '<div class="result error">❌ Veuillez entrer une adresse IP</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="result">🔄 Test en cours...</div>';
+            
+            try {
+                // Test direct de l'API (peut échouer à cause de CORS)
+                console.log('Test direct de l\'API...');
+                const directResponse = await fetch(`https://api.abuseipdb.com/api/v2/check?ipAddress=${ip}&maxAgeInDays=90&verbose`, {
+                    headers: {
+                        'Key': apiKey,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (directResponse.ok) {
+                    const data = await directResponse.json();
+                    displaySuccess('API directe', data);
+                    return;
+                }
+            } catch (error) {
+                console.log('API directe échouée (CORS attendu):', error);
+            }
+            
+            // Test via le proxy cURL
+            try {
+                console.log('Test via le proxy cURL...');
+                const proxyResponse = await fetch(`api-proxy.php?ip=${ip}`, {
+                    headers: {
+                        'Key': apiKey,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (proxyResponse.ok) {
+                    const data = await proxyResponse.json();
+                    displaySuccess('Proxy cURL', data);
+                    return;
+                } else {
+                    const errorText = await proxyResponse.text();
+                    console.log('Proxy cURL échoué:', errorText);
+                }
+            } catch (error) {
+                console.log('Erreur proxy cURL:', error);
+            }
+            
+            // Test via le proxy simple
+            try {
+                console.log('Test via le proxy simple...');
+                const simpleResponse = await fetch(`api-proxy-simple.php?ip=${ip}`, {
+                    headers: {
+                        'Key': apiKey,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (simpleResponse.ok) {
+                    const data = await simpleResponse.json();
+                    displaySuccess('Proxy Simple', data);
+                } else {
+                    const errorText = await simpleResponse.text();
+                    resultDiv.innerHTML = `<div class="result error">❌ Tous les proxies ont échoué. Dernière erreur: ${errorText}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">❌ Erreur finale: ${error.message}</div>`;
+            }
+        }
+        
+        function displaySuccess(method, data) {
+            const resultDiv = document.getElementById('result');
+            const abuseData = data.data;
+            
+            resultDiv.innerHTML = `
+                <div class="result success">
+                    <h3>✅ Succès via ${method}</h3>
+                    <p><strong>IP:</strong> ${abuseData.ipAddress}</p>
+                    <p><strong>Pays:</strong> ${abuseData.countryName || 'Inconnu'}</p>
+                    <p><strong>ISP:</strong> ${abuseData.isp || 'Inconnu'}</p>
+                    <p><strong>Score d'abus:</strong> ${abuseData.abuseConfidencePercentage}%</p>
+                    <p><strong>Signalements:</strong> ${abuseData.totalReports || 0}</p>
+                    <p><strong>Type d'usage:</strong> ${abuseData.usageType || 'Inconnu'}</p>
+                    
+                    <details>
+                        <summary>Données complètes (JSON)</summary>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </details>
+                </div>
+            `;
+        }
+        
+        // Test au chargement avec une IP d'exemple
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedKey = localStorage.getItem('abuseipdb-key');
+            if (savedKey) {
+                document.getElementById('apiKey').value = savedKey;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+# SIEM Project - .gitignore
+
+# Logs
+*.log
+logs/
+susdr360.log
+
+# Cache et données temporaires
+cache/
+temp/
+tmp/
+*.tmp
+
+# Configuration locale
+.env
+config/local.php
+susdr360/config_local.yaml
+
+# Base de données
+*.db
+*.sqlite
+*.sqlite3
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+venv/
+env/
+
+# Node modules (si utilisé)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Clés et certificats
+*.key
+*.pem
+*.crt
+*.p12
+
+# Dossiers de build
+build/
+dist/
+
+# Fichiers de modèles ML
+*.joblib
+*.pkl
+*.pickle
+models/
+
+# Fichiers de test générés
+test_batch.json
+demo_events.json
+
+# Repositories Git imbriqués (éviter le problème)
+**/.git/
+
+# Fichiers volumineux
+*.iso
+*.zip
+*.tar.gz
+*.rar

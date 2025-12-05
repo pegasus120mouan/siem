@@ -1,0 +1,21 @@
+# SIEM Agent Linux Package v4.5.2
+# This is a placeholder file for demonstration purposes
+# In a real implementation, this would be the actual DEB package
+
+echo "SIEM Agent Linux Package"
+echo "Version: 4.5.2"
+echo "Architecture: x86_64"
+echo "Platform: Ubuntu, Debian"
+echo ""
+echo "Features:"
+echo "- Real-time log collection"
+echo "- Process monitoring"
+echo "- File integrity monitoring"
+echo "- Network monitoring"
+echo "- Encrypted communication"
+echo "- Systemd integration"
+echo ""
+echo "Installation Instructions:"
+echo "sudo dpkg -i siem-agent-4.5.2.deb"
+echo "sudo systemctl enable siem-agent"
+echo "sudo systemctl start siem-agent"

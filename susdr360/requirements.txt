@@ -1,0 +1,121 @@
+# SUSDR 360 - Requirements
+# Système Unifié de Surveillance, Détection et Réponse
+
+# Framework Web et API
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+jinja2==3.1.2
+
+# Base de données et ORM
+sqlalchemy==2.0.23
+alembic==1.12.1
+
+# Cache et Message Queue
+redis==5.0.1
+celery==5.3.4
+
+# Authentification et Sécurité
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+cryptography==41.0.7
+
+# Requêtes HTTP
+requests==2.31.0
+httpx==0.25.2
+aiofiles==23.2.1
+
+# WebSockets et Communication temps réel
+websockets==12.0
+python-socketio==5.10.0
+
+# Géolocalisation et Enrichissement
+geoip2==4.7.0
+maxminddb==2.2.0
+ipwhois==1.2.0
+dnspython==2.4.2
+whois==0.9.27
+
+# Analyse de données et Machine Learning
+pandas==2.1.3
+numpy==1.25.2
+scikit-learn==1.3.2
+joblib==1.3.2
+
+# Visualisation et Graphiques
+matplotlib==3.8.2
+seaborn==0.13.0
+plotly==5.17.0
+
+# Utilitaires de date et temps
+python-dateutil==2.8.2
+pytz==2023.3
+schedule==1.2.0
+
+# Configuration et Variables d'environnement
+python-dotenv==1.0.0
+pyyaml==6.0.1
+configparser==6.0.0
+
+# APIs de Threat Intelligence
+shodan==1.30.1
+vt-py==0.18.2
+pymisp==2.4.176
+OTXv2==1.5.12
+
+# Analyse de Malware et Sécurité
+yara-python==4.3.1
+pefile==2023.2.7
+python-magic==0.4.27
+
+# Logging et Monitoring
+structlog==23.2.0
+prometheus-client==0.19.0
+
+# Tests et Développement
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+black==23.11.0
+flake8==6.1.0
+
+# Documentation
+mkdocs==1.5.3
+mkdocs-material==9.4.8
+
+# Agents Windows (optionnel)
+pywin32==306; sys_platform == "win32"
+wmi==1.5.1; sys_platform == "win32"
+
+# Agents Linux (optionnel)
+psutil==5.9.6
+systemd-python==235; sys_platform == "linux"
+
+# Parsing et Formats de données
+xmltodict==0.13.0
+jsonschema==4.20.0
+lxml==4.9.3
+
+# Réseau et Protocoles
+scapy==2.5.0
+netaddr==0.9.0
+pypcap==1.2.3
+
+# Chiffrement et Hachage
+hashlib
+hmac
+bcrypt==4.1.2
+
+# Interface en ligne de commande
+click==8.1.7
+rich==13.7.0
+typer==0.9.0
+
+# Validation de données
+pydantic==2.5.0
+email-validator==2.1.0
+
+# Utilitaires système
+pathlib2==2.3.7
+watchdog==3.0.0
+filelock==3.13.1
