@@ -88,7 +88,52 @@
 - **Base de données** : SQLite (par défaut) ou PostgreSQL
 - **Redis** : Pour le cache et les queues (optionnel)
 
-## 🛠️ Installation
+## Installation Rapide
+
+### Ubuntu 20.04 LTS
+
+#### Option 1: Installation avec Nginx (par défaut)
+
+```bash
+# Télécharger le script d'installation
+wget https://raw.githubusercontent.com/pegasus120mouan/siem/main/susdr360/install_ubuntu.sh
+
+# Rendre exécutable
+chmod +x install_ubuntu.sh
+
+# Exécuter l'installation
+sudo ./install_ubuntu.sh
+```
+
+#### Option 2: Installation avec Apache
+
+```bash
+# Télécharger le script d'installation Apache
+wget https://raw.githubusercontent.com/pegasus120mouan/siem/main/susdr360/install_ubuntu_apache.sh
+
+# Rendre exécutable
+chmod +x install_ubuntu_apache.sh
+
+# Exécuter l'installation
+sudo ./install_ubuntu_apache.sh
+```
+
+#### Migration de Nginx vers Apache
+
+Si vous avez déjà une installation avec Nginx et souhaitez migrer vers Apache :
+
+```bash
+# Télécharger le script de migration
+wget https://raw.githubusercontent.com/pegasus120mouan/siem/main/susdr360/migrate_nginx_to_apache.sh
+
+# Rendre exécutable
+chmod +x migrate_nginx_to_apache.sh
+
+# Exécuter la migration
+sudo ./migrate_nginx_to_apache.sh
+```
+
+## Installation
 
 ### 1. Clonage du repository
 ```bash
