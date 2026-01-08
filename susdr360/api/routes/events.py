@@ -15,6 +15,7 @@ from ..models import (
 )
 from ...core.event_processor import EventProcessor, Event
 from ..agent_registry import upsert_agent, increment_events
+from ..detections_engine import process_linux_auth_event
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -48,6 +49,16 @@ async def ingest_event(
         os_name = str(raw.get('os') or raw.get('platform') or 'Linux')
         version = str(raw.get('agent_version') or raw.get('version') or '4.5.2')
         agent_id = str(raw.get('agent_id') or raw.get('agent') or hostname)
+
+        if event_data.source == 'linux_auth':
+            msg = str(raw.get('message') or '')
+            if msg:
+                process_linux_auth_event(
+                    agent_id=agent_id,
+                    hostname=hostname,
+                    message=msg,
+                    observed_at_iso=(event_data.timestamp.isoformat() if event_data.timestamp else None),
+                )
 
         # Met à jour / crée l'agent dans le registre
         upsert_agent(

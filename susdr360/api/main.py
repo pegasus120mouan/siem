@@ -17,7 +17,7 @@ import json
 
 from ..core.event_processor import EventProcessor, Event
 from ..core.correlation_engine import CorrelationEngine
-from .routes import events, incidents, analytics, config as config_routes, agents as agents_routes
+from .routes import events, incidents, analytics, config as config_routes, agents as agents_routes, detections as detections_routes
 from .middleware.auth import AuthManager
 from .models import *
 
@@ -178,6 +178,12 @@ class SUSDR360API:
             agents_routes.router,
             prefix="/api/v1/agents",
             tags=["Agents"]
+        )
+
+        self.app.include_router(
+            detections_routes.router,
+            prefix="/api/v1/detections",
+            tags=["Detections"]
         )
     
     def _setup_event_handlers(self):
