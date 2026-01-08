@@ -12,6 +12,10 @@ def _db_path() -> Path:
     return data_dir / "detections.db"
 
 
+def get_db_path() -> str:
+    return str(_db_path())
+
+
 def _connect() -> sqlite3.Connection:
     conn = sqlite3.connect(str(_db_path()))
     conn.row_factory = sqlite3.Row
@@ -237,6 +241,23 @@ def list_alerts(limit: int = 100) -> List[Dict[str, Any]]:
             d.pop("evidence_json", None)
             out.append(d)
         return out
+    finally:
+        conn.close()
+
+
+def get_db_stats() -> Dict[str, Any]:
+    init_db()
+    conn = _connect()
+    try:
+        auth_events = conn.execute("SELECT COUNT(1) AS c FROM auth_events").fetchone()["c"]
+        alerts = conn.execute("SELECT COUNT(1) AS c FROM alerts").fetchone()["c"]
+        state = conn.execute("SELECT COUNT(1) AS c FROM state").fetchone()["c"]
+        return {
+            "db_path": get_db_path(),
+            "auth_events": int(auth_events or 0),
+            "alerts": int(alerts or 0),
+            "state": int(state or 0),
+        }
     finally:
         conn.close()
 

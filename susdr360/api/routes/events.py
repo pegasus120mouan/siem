@@ -53,12 +53,15 @@ async def ingest_event(
         if event_data.source == 'linux_auth':
             msg = str(raw.get('message') or '')
             if msg:
-                process_linux_auth_event(
-                    agent_id=agent_id,
-                    hostname=hostname,
-                    message=msg,
-                    observed_at_iso=(event_data.timestamp.isoformat() if event_data.timestamp else None),
-                )
+                try:
+                    process_linux_auth_event(
+                        agent_id=agent_id,
+                        hostname=hostname,
+                        message=msg,
+                        observed_at_iso=(event_data.timestamp.isoformat() if event_data.timestamp else None),
+                    )
+                except Exception:
+                    pass
 
         # Met à jour / crée l'agent dans le registre
         upsert_agent(
