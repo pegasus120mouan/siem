@@ -37,6 +37,20 @@ class EventCreate(BaseModel):
     source: str = Field(..., description="Source de l'événement")
     raw_data: Dict[str, Any] = Field(..., description="Données brutes de l'événement")
     timestamp: Optional[datetime] = Field(None, description="Timestamp de l'événement")
+
+    @validator('timestamp', pre=True)
+    def _parse_timestamp(cls, v):
+        if v is None or isinstance(v, datetime):
+            return v
+        if isinstance(v, str):
+            s = v.strip()
+            if s.endswith('Z'):
+                s = s[:-1] + '+00:00'
+            try:
+                return datetime.fromisoformat(s)
+            except Exception:
+                return v
+        return v
     
     class Config:
         schema_extra = {
