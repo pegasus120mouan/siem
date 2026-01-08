@@ -3,7 +3,7 @@ SUSDR 360 - Routes des Événements
 Gestion des événements de sécurité via API REST
 """
 
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
@@ -20,11 +20,18 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 security = HTTPBearer()
 
+
+def get_event_processor(request: Request) -> EventProcessor:
+    event_processor = getattr(request.app.state, 'event_processor', None)
+    if event_processor is None:
+        raise HTTPException(status_code=500, detail="EventProcessor not initialized")
+    return event_processor
+
 @router.post("/ingest", response_model=SuccessResponse)
 async def ingest_event(
     event_data: EventCreate,
     background_tasks: BackgroundTasks,
-    event_processor: EventProcessor = Depends(),
+    event_processor: EventProcessor = Depends(get_event_processor),
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """

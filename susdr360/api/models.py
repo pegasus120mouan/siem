@@ -3,7 +3,7 @@ SUSDR 360 - Modèles Pydantic
 Modèles de données pour l'API REST
 """
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Dict, List, Any, Optional, Union
 from datetime import datetime
 from enum import Enum
@@ -38,7 +38,8 @@ class EventCreate(BaseModel):
     raw_data: Dict[str, Any] = Field(..., description="Données brutes de l'événement")
     timestamp: Optional[datetime] = Field(None, description="Timestamp de l'événement")
 
-    @validator('timestamp', pre=True)
+    @field_validator('timestamp', mode='before')
+    @classmethod
     def _parse_timestamp(cls, v):
         if v is None or isinstance(v, datetime):
             return v
@@ -313,8 +314,7 @@ class ComponentStats(BaseModel):
     metrics: Dict[str, Any] = Field(default_factory=dict)
 
 # Validateurs personnalisés
-@validator('timestamp', pre=True, always=True)
-def parse_timestamp(cls, v):
+def parse_timestamp(v):
     if isinstance(v, str):
         return datetime.fromisoformat(v.replace('Z', '+00:00'))
     return v or datetime.now()

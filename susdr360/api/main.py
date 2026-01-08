@@ -234,7 +234,12 @@ def create_app(config: Dict[str, Any] = None) -> FastAPI:
         }
     
     susdr_api = SUSDR360API(config)
-    return susdr_api.app
+    app = susdr_api.app
+    app.state.event_processor = susdr_api.event_processor
+    app.state.correlation_engine = susdr_api.correlation_engine
+    app.state.anomaly_detector = susdr_api.anomaly_detector
+    app.state.auth_manager = susdr_api.auth_manager
+    return app
 
 
 # Export ASGI app for uvicorn: `uvicorn susdr360.api.main:app`
