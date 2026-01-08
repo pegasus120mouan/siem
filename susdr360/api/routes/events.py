@@ -14,6 +14,7 @@ from ..models import (
     ErrorResponse, PaginatedResponse, EventTypeEnum, SeverityEnum
 )
 from ...core.event_processor import EventProcessor, Event
+from ..agent_registry import upsert_agent, increment_events
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -34,6 +35,25 @@ async def ingest_event(
     - **timestamp**: Timestamp optionnel (utilise l'heure actuelle si non fourni)
     """
     try:
+        raw = event_data.raw_data or {}
+        hostname = str(raw.get('host') or raw.get('hostname') or raw.get('computer') or raw.get('Computer') or 'unknown')
+        ip_address = str(raw.get('ip') or raw.get('ip_address') or raw.get('IpAddress') or '')
+        os_name = str(raw.get('os') or raw.get('platform') or 'Linux')
+        version = str(raw.get('agent_version') or raw.get('version') or '4.5.2')
+        agent_id = str(raw.get('agent_id') or raw.get('agent') or hostname)
+
+        # Met à jour / crée l'agent dans le registre
+        upsert_agent(
+            agent_id=agent_id,
+            hostname=hostname,
+            ip_address=ip_address,
+            os_name=os_name,
+            version=version,
+            status='active',
+            seen_at_iso=(event_data.timestamp.isoformat() if event_data.timestamp else None),
+        )
+        increment_events(agent_id, 1)
+
         # Traitement asynchrone de l'événement
         background_tasks.add_task(
             event_processor.process_raw_event,

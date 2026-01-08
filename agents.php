@@ -2,49 +2,34 @@
 $pageTitle = "Gestion des Agents";
 require_once 'includes/header.php';
 require_once 'config/database.php';
+require_once 'susdr360_integration.php';
 
 // Initialiser la base de données
 $db = new ConfigDatabase();
 
-// Simuler des données d'agents pour la démo
-$agents = [
-    [
-        'id' => 1,
-        'name' => 'SIEM-AGENT-001',
-        'hostname' => 'srv-web-01',
-        'ip_address' => '192.168.1.10',
-        'os' => 'Ubuntu 20.04 LTS',
-        'version' => '4.5.2',
-        'status' => 'active',
-        'last_seen' => '2024-12-02 20:10:00',
-        'events_count' => 1234,
-        'group' => 'web-servers'
-    ],
-    [
-        'id' => 2,
-        'name' => 'SIEM-AGENT-002',
-        'hostname' => 'srv-db-01',
-        'ip_address' => '192.168.1.20',
-        'os' => 'CentOS 8',
-        'version' => '4.5.1',
-        'status' => 'active',
-        'last_seen' => '2024-12-02 20:09:30',
-        'events_count' => 856,
-        'group' => 'database'
-    ],
-    [
-        'id' => 3,
-        'name' => 'SIEM-AGENT-003',
-        'hostname' => 'workstation-01',
-        'ip_address' => '192.168.1.100',
-        'os' => 'Windows 10',
-        'version' => '4.5.0',
-        'status' => 'disconnected',
-        'last_seen' => '2024-12-02 18:45:00',
-        'events_count' => 423,
-        'group' => 'endpoints'
-    ]
-];
+$apiUrl = $db->getSetting('susdr360_api_url', 'http://localhost:8000');
+$susdr = new SUSDR360Integration($apiUrl, 5);
+
+$agentsRaw = $susdr->getAgents();
+$agents = [];
+if (is_array($agentsRaw)) {
+    $i = 1;
+    foreach ($agentsRaw as $a) {
+        $agents[] = [
+            'id' => $i,
+            'name' => $a['agent_id'] ?? ('SIEM-AGENT-' . str_pad((string)$i, 3, '0', STR_PAD_LEFT)),
+            'hostname' => $a['hostname'] ?? 'unknown',
+            'ip_address' => $a['ip_address'] ?? '',
+            'os' => $a['os'] ?? 'Linux',
+            'version' => $a['version'] ?? '4.5.2',
+            'status' => $a['status'] ?? 'never_connected',
+            'last_seen' => $a['last_seen'] ?? null,
+            'events_count' => (int)($a['events_count'] ?? 0),
+            'group' => 'default'
+        ];
+        $i++;
+    }
+}
 ?>
 
 <div class="space-y-6">
@@ -347,17 +332,13 @@ $agents = [
                     </div>
                     
                     <div class="space-y-2">
-                        <button onclick="downloadAgent('linux', 'deb')" class="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                        <button onclick="downloadAgent('linux', 'install')" class="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
                             <i class="fas fa-download mr-2"></i>
-                            Télécharger siem-agent-4.5.2.deb
+                            Télécharger install.sh (Linux)
                         </button>
-                        <button onclick="downloadAgent('linux', 'rpm')" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center text-sm">
-                            <i class="fas fa-download mr-2"></i>
-                            Version RPM (.rpm)
-                        </button>
-                        <button onclick="downloadAgent('linux', 'tar')" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center text-sm">
-                            <i class="fas fa-download mr-2"></i>
-                            Archive générique (.tar.gz)
+                        <button onclick="switchTab('install')" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center text-sm">
+                            <i class="fas fa-terminal mr-2"></i>
+                            Voir la commande d'installation (one-liner)
                         </button>
                     </div>
                     
@@ -454,7 +435,7 @@ $agents = [
                             <code class="text-green-400 text-sm bg-gray-900 p-2 rounded block">
                                 msiexec /i siem-agent-4.5.2-x64.msi /quiet SERVER_URL="https://VOTRE-SERVEUR-SIEM.COM"
                             </code>
-                            <p class="text-gray-400 text-xs mt-2">Remplacez VOTRE-SERVEUR-SIEM.COM par l'URL de votre serveur</p>
+                            <p class="text-gray-400 text-xs mt-2">Remplacez VOTRE-SERVEUR-SIEM.COM par un domaine/URL ou une IP (ex: siem.entreprise.com ou 192.168.1.100)</p>
                         </div>
                     </div>
                 </div>
@@ -488,17 +469,11 @@ $agents = [
                         </div>
                         
                         <div class="bg-gray-800 rounded-lg p-4">
-                            <p class="text-gray-300 text-sm mb-2"><strong>Installation générique (.tar.gz) :</strong></p>
-                            <code class="text-green-400 text-sm bg-gray-900 p-2 rounded block mb-1">
-                                tar -xzf siem-agent-4.5.2.tar.gz
-                            </code>
-                            <code class="text-green-400 text-sm bg-gray-900 p-2 rounded block mb-1">
-                                cd siem-agent-4.5.2
-                            </code>
+                            <p class="text-gray-300 text-sm mb-2"><strong>Installation one-liner (recommandé) :</strong></p>
                             <code class="text-green-400 text-sm bg-gray-900 p-2 rounded block">
-                                sudo ./install.sh --server-url="https://VOTRE-SERVEUR-SIEM.COM"
+                                curl -sSL http://VOTRE-SERVEUR-SIEM/agents/linux/install.sh | sudo bash -s -- --server "http://IP_DU_SIEM:8000" --token "VOTRE_TOKEN"
                             </code>
-                            <p class="text-gray-400 text-xs mt-2">Remplacez VOTRE-SERVEUR-SIEM.COM par l'URL de votre serveur</p>
+                            <p class="text-gray-400 text-xs mt-2">Renseignez l'IP/URL du SIEM (port 8000) et le token. Exemple: --server "http://192.168.1.10:8000"</p>
                         </div>
                     </div>
                 </div>
@@ -513,9 +488,9 @@ $agents = [
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-white text-sm font-medium mb-2">URL du serveur SIEM *</label>
-                            <input type="text" id="serverUrl" placeholder="https://votre-serveur-siem.com" class="w-full bg-gray-800 text-white px-3 py-2 rounded-md border border-gray-600 focus:border-blue-500 focus:outline-none" required>
-                            <p class="text-gray-400 text-xs mt-1">Exemple: https://siem.entreprise.com ou https://192.168.1.100</p>
+                            <label class="block text-white text-sm font-medium mb-2">URL ou IP du serveur SIEM *</label>
+                            <input type="text" id="serverUrl" placeholder="https://siem.entreprise.com ou 192.168.1.100" class="w-full bg-gray-800 text-white px-3 py-2 rounded-md border border-gray-600 focus:border-blue-500 focus:outline-none" required>
+                            <p class="text-gray-400 text-xs mt-1">Exemple: siem.entreprise.com, https://siem.entreprise.com, 192.168.1.100</p>
                         </div>
                         
                         <div>
@@ -658,6 +633,18 @@ function switchTab(tabName) {
 }
 
 function downloadAgent(platform, format) {
+    if (platform === 'linux' && format === 'install') {
+        const link = document.createElement('a');
+        link.href = 'agents/linux/install.sh';
+        link.download = 'install.sh';
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showNotification('Téléchargement de install.sh...', 'info');
+        return;
+    }
+
     const downloads = {
         'windows': {
             'msi': {
@@ -724,7 +711,9 @@ function downloadAgent(platform, format) {
 
 function generateAgentContent(platform, format) {
     const timestamp = new Date().toISOString();
-    const serverUrl = document.getElementById('serverUrl') ? document.getElementById('serverUrl').value || 'https://your-siem-server.com' : 'https://your-siem-server.com';
+    const rawServer = document.getElementById('serverUrl') ? document.getElementById('serverUrl').value || 'https://your-siem-server.com' : 'https://your-siem-server.com';
+    const normalized = normalizeServerEndpoint(rawServer, 1514);
+    const serverUrl = normalized.url;
     
     const contents = {
         'windows': {
@@ -917,29 +906,57 @@ function generateAuthKey() {
     showNotification('Nouvelle clé d\'authentification générée', 'success');
 }
 
+function normalizeServerEndpoint(rawInput, fallbackPort) {
+    const trimmed = (rawInput || '').trim();
+    if (!trimmed) {
+        return { url: '', port: fallbackPort };
+    }
+
+    // new URL() exige un schéma. On accepte donc:
+    // - domaine/IP (ex: 192.168.1.10, siem.local)
+    // - URL complète (ex: https://siem.local:8443)
+    const hasScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(trimmed);
+    const candidate = hasScheme ? trimmed : `https://${trimmed}`;
+
+    const urlObj = new URL(candidate);
+
+    // Normaliser: retirer trailing slash, et gérer le port.
+    const portFromUrl = urlObj.port ? parseInt(urlObj.port, 10) : null;
+    urlObj.port = '';
+    const normalizedUrl = urlObj.toString().replace(/\/$/, '');
+
+    return {
+        url: normalizedUrl,
+        port: Number.isFinite(portFromUrl) ? portFromUrl : fallbackPort
+    };
+}
+
 function generateConfigFile() {
-    const serverUrl = document.getElementById('serverUrl').value.trim();
+    const rawServer = document.getElementById('serverUrl').value.trim();
+    const portField = parseInt(document.getElementById('serverPort').value, 10);
+    const fallbackPort = Number.isFinite(portField) ? portField : 1514;
     
-    // Validation de l'URL
-    if (!serverUrl) {
-        showNotification('Veuillez renseigner l\'URL du serveur SIEM', 'warning');
+    // Validation de l'entrée
+    if (!rawServer) {
+        showNotification('Veuillez renseigner l\'URL ou l\'IP du serveur SIEM', 'warning');
         document.getElementById('serverUrl').focus();
         return;
     }
     
-    // Validation du format URL
+    // Validation et normalisation URL/IP
+    let endpoint;
     try {
-        new URL(serverUrl);
+        endpoint = normalizeServerEndpoint(rawServer, fallbackPort);
     } catch (e) {
-        showNotification('Format d\'URL invalide. Utilisez https://votre-serveur.com', 'warning');
+        showNotification('Format invalide. Utilisez un domaine/URL ou une IP (ex: siem.entreprise.com ou 192.168.1.100)', 'warning');
         document.getElementById('serverUrl').focus();
         return;
     }
     
     const config = {
         server: {
-            url: serverUrl,
-            port: parseInt(document.getElementById('serverPort').value),
+            url: endpoint.url,
+            port: endpoint.port,
             auth_key: document.getElementById('authKey').value
         },
         agent: {
@@ -974,21 +991,23 @@ function generateConfigFile() {
 }
 
 function testConnection() {
-    const serverUrl = document.getElementById('serverUrl').value.trim();
-    const serverPort = document.getElementById('serverPort').value;
+    const rawServer = document.getElementById('serverUrl').value.trim();
+    const portField = parseInt(document.getElementById('serverPort').value, 10);
+    const fallbackPort = Number.isFinite(portField) ? portField : 1514;
     
-    // Validation de l'URL
-    if (!serverUrl) {
-        showNotification('Veuillez renseigner l\'URL du serveur SIEM', 'warning');
+    // Validation de l'entrée
+    if (!rawServer) {
+        showNotification('Veuillez renseigner l\'URL ou l\'IP du serveur SIEM', 'warning');
         document.getElementById('serverUrl').focus();
         return;
     }
     
-    // Validation du format URL
+    // Validation et normalisation URL/IP
+    let endpoint;
     try {
-        new URL(serverUrl);
+        endpoint = normalizeServerEndpoint(rawServer, fallbackPort);
     } catch (e) {
-        showNotification('Format d\'URL invalide. Utilisez https://votre-serveur.com', 'warning');
+        showNotification('Format invalide. Utilisez un domaine/URL ou une IP (ex: siem.entreprise.com ou 192.168.1.100)', 'warning');
         document.getElementById('serverUrl').focus();
         return;
     }
@@ -1000,9 +1019,9 @@ function testConnection() {
         const success = Math.random() > 0.3; // 70% de chance de succès
         
         if (success) {
-            showNotification(`Connexion réussie vers ${serverUrl}:${serverPort}`, 'success');
+            showNotification(`Connexion réussie vers ${endpoint.url}:${endpoint.port}`, 'success');
         } else {
-            showNotification(`Échec de la connexion vers ${serverUrl}:${serverPort}`, 'error');
+            showNotification(`Échec de la connexion vers ${endpoint.url}:${endpoint.port}`, 'error');
         }
     }, 3000);
 }

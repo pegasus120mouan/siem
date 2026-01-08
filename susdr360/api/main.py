@@ -17,10 +17,14 @@ import json
 
 from ..core.event_processor import EventProcessor, Event
 from ..core.correlation_engine import CorrelationEngine
-from ..ai_engine.anomaly_detector import AnomalyDetector
-from .routes import events, incidents, analytics, config as config_routes
+from .routes import events, incidents, analytics, config as config_routes, agents as agents_routes
 from .middleware.auth import AuthManager
 from .models import *
+
+try:
+    from ..ai_engine.anomaly_detector import AnomalyDetector
+except Exception:
+    AnomalyDetector = None
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +44,11 @@ class SUSDR360API:
         # Composants principaux
         self.event_processor = EventProcessor(config.get('event_processor', {}))
         self.correlation_engine = CorrelationEngine(config.get('correlation', {}))
-        self.anomaly_detector = AnomalyDetector(config.get('anomaly_detection', {}))
+        self.anomaly_detector = (
+            AnomalyDetector(config.get('anomaly_detection', {}))
+            if AnomalyDetector is not None
+            else None
+        )
         self.auth_manager = AuthManager(config.get('auth', {}))
         
         # Configuration des middlewares
@@ -96,7 +104,7 @@ class SUSDR360API:
                 "components": {
                     "event_processor": "active",
                     "correlation_engine": "active",
-                    "anomaly_detector": "active"
+                    "anomaly_detector": "active" if self.anomaly_detector is not None else "disabled"
                 }
             }
         
@@ -164,6 +172,12 @@ class SUSDR360API:
             config_routes.router,
             prefix="/api/v1/config",
             tags=["Configuration"]
+        )
+
+        self.app.include_router(
+            agents_routes.router,
+            prefix="/api/v1/agents",
+            tags=["Agents"]
         )
     
     def _setup_event_handlers(self):

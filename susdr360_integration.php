@@ -125,6 +125,13 @@ class SUSDR360Integration {
     public function getSystemHealth() {
         return $this->apiCall('/api/v1/dashboard/system');
     }
+
+    /**
+     * Récupère la liste des agents
+     */
+    public function getAgents() {
+        return $this->apiCall('/api/v1/agents/', false);
+    }
     
     /**
      * Génère le HTML pour l'intégration dans le dashboard
