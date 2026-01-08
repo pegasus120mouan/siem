@@ -136,7 +136,7 @@ class SUSDR360API:
             return {
                 "event_processor": self.event_processor.get_stats(),
                 "correlation_engine": self.correlation_engine.get_stats(),
-                "anomaly_detector": self.anomaly_detector.get_stats(),
+                "anomaly_detector": self.anomaly_detector.get_stats() if self.anomaly_detector is not None else {},
                 "timestamp": datetime.now().isoformat()
             }
         
@@ -190,9 +190,10 @@ class SUSDR360API:
             await self.correlation_engine.analyze_event(event)
             
             # Détection d'anomalies
-            anomaly_result = await self.anomaly_detector.analyze_event(event)
-            if anomaly_result and anomaly_result.is_anomaly:
-                logger.warning(f"Anomalie détectée: {anomaly_result.explanation}")
+            if self.anomaly_detector is not None:
+                anomaly_result = await self.anomaly_detector.analyze_event(event)
+                if anomaly_result and anomaly_result.is_anomaly:
+                    logger.warning(f"Anomalie détectée: {anomaly_result.explanation}")
         
         # Gestionnaire pour les incidents
         async def handle_incident(incident):
@@ -235,9 +236,12 @@ def create_app(config: Dict[str, Any] = None) -> FastAPI:
     susdr_api = SUSDR360API(config)
     return susdr_api.app
 
+
+# Export ASGI app for uvicorn: `uvicorn susdr360.api.main:app`
+app = create_app()
+
 # Point d'entrée pour le développement
 if __name__ == "__main__":
-    app = create_app()
     uvicorn.run(
         app,
         host="0.0.0.0",
